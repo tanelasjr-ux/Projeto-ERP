@@ -1,0 +1,23 @@
+{
+  "summary": "Frontend-only testing of Next.js 15 + Supabase Auth foundation. All 6 requested scenarios PASSED: (1) unauthenticated / redirects to /login; /reset-password and /accept-invite render publicly; (2) wrong password stays on /login and shows generic 'E-mail ou senha inválidos' in [data-testid=login-error]; (3) correct login (teste@exemplo.com/123456) navigates to / and renders [data-testid=home-greeting]='Bem-vindo(a) ao ERP Financeiro' and [data-testid=header-user-email]='teste@exemplo.com'; (4) sign-out button returns to /login and subsequent visit to / re-redirects to /login (session cleared); (5) forgot-password shows generic success 'Se este e-mail estiver cadastrado, enviamos as instruções.' in [data-testid=forgot-success]; (6) 375px viewport: /login and authenticated home have no horizontal overflow (scrollWidth=375).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Foundation scope only; schema-dependent features (company selector, dynamic menu, branding, first-access wizard, People & Access) intentionally deferred as documented — no issues to flag at this stage.",
+    "Middleware correctly protects routes via supabase.auth.getUser(); generic error/success messaging on login and forgot-password properly avoids account enumeration."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (no backend)", "frontend": "100% (6/6 scenarios)"},
+  "test_credentials": "teste@exemplo.com / 123456 (Supabase Auth) — worked as expected. /app/memory/test_credentials.md was not present; credentials taken from review_request.",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Next.js 15 App Router on port 3000 via supervisor. Preview URL: https://663da870-3bec-43c9-8a49-3712a1a956fb.preview.emergentagent.com . Supabase cookie-based auth working end-to-end. data-testids in use: login-error, login-forgot-link, forgot-email-input, forgot-submit-button, forgot-success, home-greeting, header-user-email, sign-out-button. Email/password inputs and submit button on /login do NOT have documented data-testids (used generic input[type=email]/[type=password]/button[type=submit] selectors successfully). Consider adding login-email-input/login-password-input/login-submit-button testids when expanding coverage.",
+  "rca of the issue": "N/A — no bugs found."
+}
