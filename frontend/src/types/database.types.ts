@@ -1364,6 +1364,21 @@ export type Database = {
         Args: { p_role: string; p_tenant: string; p_user: string }
         Returns: undefined
       }
+      installment_totals: {
+        Args: {
+          p_from?: string
+          p_kind: Database["public"]["Enums"]["doc_kind"]
+          p_partner?: string
+          p_status?: string
+          p_tenant: string
+          p_to?: string
+        }
+        Returns: {
+          qtd: number
+          saldo_aberto: number
+          saldo_vencido: number
+        }[]
+      }
       invitation_token: { Args: { p_invitation: string }; Returns: string }
       invite_member: {
         Args: { p_email: string; p_role: string; p_tenant: string }
