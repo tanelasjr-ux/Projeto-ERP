@@ -577,6 +577,7 @@ export type Database = {
     }
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
+      accept_my_invitation: { Args: { p_invitation: string }; Returns: string }
       get_public_branding: {
         Args: { p_slug: string }
         Returns: {
@@ -620,6 +621,16 @@ export type Database = {
         Returns: {
           email: string
           expired: boolean
+          expires_at: string
+          invitation_id: string
+          invited_at: string
+          role_name: string
+        }[]
+      }
+      my_pending_invitations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          company_name: string
           expires_at: string
           invitation_id: string
           invited_at: string
