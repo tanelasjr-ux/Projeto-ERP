@@ -589,9 +589,21 @@ export type Database = {
         Args: { p_role: string; p_tenant: string; p_user: string }
         Returns: undefined
       }
+      invitation_token: { Args: { p_invitation: string }; Returns: string }
       invite_member: {
         Args: { p_email: string; p_role: string; p_tenant: string }
         Returns: string
+      }
+      list_member_permissions: {
+        Args: { p_tenant: string; p_user: string }
+        Returns: {
+          description: string
+          label: string
+          module: string
+          permission_key: string
+          risk: string
+          sort_order: number
+        }[]
       }
       list_members: {
         Args: { p_tenant: string }
@@ -601,6 +613,17 @@ export type Database = {
           roles: string[]
           status: string
           user_id: string
+        }[]
+      }
+      list_pending_invitations: {
+        Args: { p_tenant: string }
+        Returns: {
+          email: string
+          expired: boolean
+          expires_at: string
+          invitation_id: string
+          invited_at: string
+          role_name: string
         }[]
       }
       provision_tenant: {
@@ -616,6 +639,7 @@ export type Database = {
         }
         Returns: string
       }
+      revoke_invitation: { Args: { p_invitation: string }; Returns: undefined }
       revoke_role: {
         Args: { p_role: string; p_tenant: string; p_user: string }
         Returns: undefined
