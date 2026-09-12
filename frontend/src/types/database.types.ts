@@ -1431,6 +1431,19 @@ export type Database = {
         }
         Returns: string
       }
+      preview_installments: {
+        Args: {
+          p_count: number
+          p_first_due: string
+          p_interval_days?: number
+          p_total: number
+        }
+        Returns: {
+          amount: number
+          due_date: string
+          seq: number
+        }[]
+      }
       provision_tenant: {
         Args: {
           p_business_type?: string
@@ -1474,6 +1487,10 @@ export type Database = {
           tax_id: string
           trade_name: string
         }[]
+      }
+      seed_missing_accounts: {
+        Args: { p_has_inventory?: boolean; p_tenant: string }
+        Returns: number
       }
       set_member_status: {
         Args: { p_status: string; p_tenant: string; p_user: string }
