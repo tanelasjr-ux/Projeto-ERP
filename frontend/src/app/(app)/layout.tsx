@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listMyTenants, getTenant } from "@/lib/data/tenants";
 import { getActiveTenantCookie } from "@/lib/active-tenant";
 import { getEnabledFeatureKeys } from "@/lib/data/features";
-import { getMyPermissions } from "@/lib/data/access";
+import { getMyPermissions, touchMember } from "@/lib/data/access";
 import { getBranding } from "@/lib/data/branding";
 import { buildVisibleNav } from "@/lib/nav";
 import { hexToHslTriplet } from "@/lib/format";
@@ -64,7 +64,7 @@ export default async function AppLayout({
   ]);
 
   try {
-    await supabase.rpc("touch_member", { p_tenant: activeId });
+    await touchMember(activeId);
   } catch {
     // não crítico
   }

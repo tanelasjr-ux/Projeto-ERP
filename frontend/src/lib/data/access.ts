@@ -56,6 +56,13 @@ export async function getMemberRoleIds(
   return (data ?? []).map((r) => r.role_id);
 }
 
+// Registra o "último acesso" do usuário atual na empresa ativa.
+// Regra de negócio vive no banco (função touch_member); aqui só a invocamos.
+export async function touchMember(tenantId: string): Promise<void> {
+  const supabase = await createClient();
+  await supabase.rpc("touch_member", { p_tenant: tenantId });
+}
+
 export async function listMembers(tenantId: string): Promise<Member[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("list_members", {

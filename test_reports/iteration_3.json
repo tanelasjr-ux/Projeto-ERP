@@ -1,0 +1,24 @@
+{
+  "summary": "Non-regression frontend testing of the internal refactor that (a) removed orphan src/lib/database.types.ts and (b) moved supabase.rpc('touch_member') from (app)/layout.tsx into a new touchMember(tenantId) function in src/lib/data/access.ts. All 5 requested scenarios PASSED with no regressions. (1) /login loads HTTP 200 with visible email + password inputs and 'Entrar' submit; (2) accessing / while logged out redirects to /login (middleware still works); (3) login with teste@exemplo.com / 123456 authenticates and lands on / rendering the app shell — [data-testid=home-greeting]='Olá! Bem-vindo(a) à Empresa Teste LTDA' and [data-testid=sidebar-nav] present, no white screen / 500 / Next.js error dialog. This confirms the layout.tsx path that awaits touchMember(activeId) from @/lib/data/access executes successfully; (4) navigating to /pessoas renders the members table — [data-testid=member-row-teste@exemplo.com] and [data-testid=invite-open-button] present, no error; (5) hard reload (F5) on / re-executes the layout (and therefore touchMember) — home-greeting and sidebar-nav still render with identical greeting text. No console errors, no server-side crash, no pageerror events. Only benign console warnings observed (font preload timing).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Refactor is clean: touchMember(tenantId) is a thin wrapper over supabase.rpc('touch_member', { p_tenant: tenantId }) in src/lib/data/access.ts; layout.tsx correctly awaits it inside try/catch so RPC failures remain non-critical, preserving prior behaviour.",
+    "Import in layout.tsx `import { getMyPermissions, touchMember } from '@/lib/data/access'` is correct and there are no remaining references to database.types.ts (verified indirectly — no build error on any tested route).",
+    "touchMember returns void and swallows the supabase error object; if you ever want observability, consider logging error?.message inside the wrapper (non-blocking suggestion, not a regression)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (no custom backend)", "frontend": "100% (5/5 non-regression scenarios)"},
+  "test_credentials": "teste@exemplo.com / 123456 (from /app/memory/test_credentials.md) — worked.",
+  "seed_data_creation": "None. Invite/grant flows were NOT exercised in this iteration (per request: non-destructive regression only).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Refactor validated. next.config.mjs still contains the serverActions.allowedOrigins fix from iteration_2 (needed for invite/grant/revoke/status server actions through the preview ingress). Preview URL used: https://dcd5b2bc-5205-428d-b88f-5ddf86af98dc.preview.emergentagent.com. The Next dev indicator (`nextjs-portal` element) is always present in DOM — do not treat it as an error; check for `[data-nextjs-dialog-overlay]` or actual `.error` text instead.",
+  "rca of the issue": "No issue found; refactor is a true non-regression."
+}

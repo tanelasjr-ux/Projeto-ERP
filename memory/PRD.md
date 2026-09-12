@@ -1,41 +1,48 @@
-# ERP Financeiro — PRD
+# Projeto-ERP — PRD / Memória
 
-## Problema
-ERP financeiro multiempresa para donos de empresa (não contadores). Stack fixa:
-Next.js 15 (App Router) + TypeScript + Tailwind + shadcn/ui, TanStack Query/Table,
-react-hook-form + zod, Recharts. Banco = Supabase Postgres (JÁ EXISTE), RLS ativa,
-lógica de negócio em funções SQL chamadas via .rpc(). SEM backend próprio; acesso
-via @supabase/supabase-js direto do Next.js, camada em /lib/data/. Dinheiro nunca
-é calculado no cliente. UI densa, pt-BR, America/Sao_Paulo, responsiva (375px).
+## Problema / contexto
+ERP financeiro para donos de empresa (não contadores). Next.js 15 (App Router) +
+TypeScript + Tailwind + shadcn/ui. Dados e auth 100% via Supabase
+(@supabase/supabase-js + @supabase/ssr). SEM backend próprio. Toda regra de
+negócio vive no banco (funções SQL / RPC SECURITY DEFINER). RLS ativa + filtro
+explícito por tenant_id em toda consulta. Idioma pt-BR, fuso America/Sao_Paulo.
 
-## Arquitetura implementada
-- Next.js 15.5.25, rodando via supervisor (`yarn start` = `next dev` na porta 3000).
-- Supabase SSR (@supabase/ssr) com cookies: client (browser), server (por request),
-  middleware refresca sessão e protege rotas.
-- Backend FastAPI é apenas um stub no-op (mantém o supervisor saudável); sem lógica.
-- Tipos em src/lib/database.types.ts = PLACEHOLDER VAZIO (schema real pendente).
+## Arquitetura (regras permanentes)
+- Camada de dados em src/lib/data/ (única a chamar supabase.from()).
+- Componentes/telas nunca chamam .from() nem .rpc() direto.
+- Server actions em src/app/actions/ usam cliente por-requisição (@supabase/ssr,
+  lê cookies) e delegam autorização ao banco.
+- Única chave permitida: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Proibido
+  service_role / sb_secret_ / string de conexão.
+- Sem aritmética de dinheiro em JS (cálculo vem do banco; front só formata pt-BR).
+- Tipos reais em src/types/database.types.ts (16 tabelas + RPCs).
+- backend/server.py = stub ASGI mínimo só para o supervisor (sem framework, sem
+  Supabase, sem env de banco, frontend nunca chama). Config do supervisor é
+  READONLY/gerenciada pela plataforma — não removível de forma permanente.
 
-## Entregue (11/09/2026) — Prompt 1 parcial (fundação independente de schema)
-- Autenticação: login (erro genérico "E-mail ou senha inválidos"), recuperação de
-  senha (mensagem genérica), rota /auth/confirm (verifyOtp), definir nova senha
-  (/reset-password), aceite de convite (/accept-invite), página de link inválido.
-- Proteção de rotas por middleware; sign out.
-- Base visual pt-BR: fundo branco, cor de destaque via CSS var (--brand), fontes
-  IBM Plex Sans/Mono, TanStack Query provider, Sonner toasts.
-- Home placeholder com saudação e e-mail do usuário.
+## Já implementado (Prompt 1)
+- Auth: login, recuperação de senha, reset, aceite de convite, /auth/confirm,
+  middleware, mensagens genéricas anti-enumeração.
+- Camada de dados: access, branding, features, permissions-catalog, provisioning,
+  roles, tenants.
+- Server actions: access, provisioning, tenant.
+- App shell: sidebar, header, seletor de empresa, menu dinâmico, branding por tenant.
+- Assistente de primeiro acesso (/assistente) → provision_tenant() (6 perguntas).
+- Pessoas e Acessos + pré-visualização "ver como esta pessoa vê".
 
-## BLOQUEIO
-O schema Supabase informado não tem as tabelas esperadas (testado: tenant_features,
-tenant_branding, partners etc. => 404). Falta o arquivo /types/database.types.ts real.
-Sem ele não dá para construir (regra: não inventar tabela/coluna):
-- Seletor de empresa + empresa ativa no estado global
-- Menu dinâmico (tenant_features × permissões)
-- Branding (tenant_branding: logo, cor, monograma)
-- Assistente de primeiro acesso (6 perguntas → provision_tenant())
-- Tela de Pessoas e Acessos (papéis, escopo, convite, suspender/desligar, "ver como")
-- Indicadores da página inicial
+## Auditoria (Tarefa 1) — CONCLUÍDA e APROVADA
+- git grep service_role/sb_secret_/postgresql:// → vazio. supabase.from fora de
+  /lib/data → vazio. Sem select *. Build/typecheck OK. /login → 200.
+- role_permissions NÃO tem tenant_id (PK composta role_id+permission_key) →
+  filtro por role_id derivado de member_roles (já por tenant) é o correto. Mantido.
 
-## Backlog (próximos prompts)
-- P0: receber database.types.ts → completar Prompt 1 (menu, empresa, branding, wizard, pessoas)
-- P1: Prompt 2 — parceiros, contas a pagar/receber (parcelamento no banco), itens, contas bancárias
-- P2: Prompt 3 — conciliação bancária (import OFX/CSV via rota de servidor, sugestões do banco)
+## Correções (Tarefa 2) — CONCLUÍDAS e VERIFICADAS (testing_agent iteration_3, 5/5)
+1. Removido placeholder órfão src/lib/database.types.ts (não era importado).
+2. touch_member movido de (app)/layout.tsx para touchMember() em lib/data/access.ts.
+3. Falso positivo do comentário resolvido (arquivo removido no item 1).
+
+## Backlog (NÃO construir até liberar — dependem da Fase 1 do banco, inexistente)
+Contas a pagar/receber, parceiros, itens, contas bancárias, conciliação,
+relatórios, DRE, estoque, propostas, funil de vendas.
+
+## Credenciais de teste → ver /app/memory/test_credentials.md
