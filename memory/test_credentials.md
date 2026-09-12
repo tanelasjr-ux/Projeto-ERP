@@ -16,6 +16,8 @@
 - Papel do usuário: Dono (todas as 31 permissões)
 - Features habilitadas: catalog.items, financial.core/payables/receivables/bank/reconciliation, reports.cashflow
 - accent_color do branding: #1F6FEB
+- Membro Vendedor (para testar "ver como"): vendedor@exemplo.com, user_id 915d06b3-0dd4-4db9-85f3-00226a790632
+  (8 permissões: partners.view/manage, items.view, crm.view/manage, quotes.view/manage, ar.view)
 
 ## Semântica de RPCs (aprendida por inspeção)
 - provision_tenant(p_legal_name, p_business_type, p_tax_regime, p_sells_on_credit, p_has_inventory, p_import_balances, p_users_count, p_tax_id) → tenant_id

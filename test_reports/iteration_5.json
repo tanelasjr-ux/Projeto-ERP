@@ -1,0 +1,31 @@
+{
+  "summary": "Verified the fix for /pessoas/visao/[userId] (ver como). RPC list_member_permissions is being called via listMemberPermissionDetails and returns the actual permissions of the audited person, no longer showing 'Sem permissões atribuídas' for another user. Vendedor and Dono both render correctly with grouped modules, risk badges, and the disclaimer.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "teste@exemplo.com / 123456 (Dono). Vendedor member found: vendedor@exemplo.com (userId 915d06b3-0dd4-4db9-85f3-00226a790632)",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The ver-como page is fully fixed. Menu is derived from tenant features INTERSECTED with member permissions (buildVisibleNav). Note that the tenant currently has features enabled only for: catalog.items, financial.core/payables/receivables/bank/reconciliation, reports.cashflow. Consequently the Vendedor's menu correctly shows Início + Contas a receber + Clientes e fornecedores + Produtos e serviços — CRM/Quotes permissions appear only in the permissions panel (not in the menu) because those features are disabled for the tenant. That is the intended behavior. For Dono, all 31 permissions across 7 modules (cadastros, comercial, contabil, empresa, estoque, financeiro, relatorios) are rendered, including 'sensível'/'crítico' risk badges (e.g., reports.dre, access.manage, ledger.post, period.close, etc.).",
+  "test_evidence": {
+    "vendedor_no_empty_state": true,
+    "vendedor_perms_via_rpc": ["partners.view", "partners.manage", "items.view", "crm.view", "crm.manage", "quotes.view", "quotes.manage", "ar.view"],
+    "vendedor_modules": ["cadastros", "comercial", "financeiro"],
+    "vendedor_menu_more_than_inicio": true,
+    "vendedor_menu_items": ["inicio", "ar", "partners", "items"],
+    "no_leakage_dre_or_pessoas_for_vendedor": true,
+    "disclaimer_present": true,
+    "view_as_link_present": "data-testid=view-as-vendedor@exemplo.com -> /pessoas/visao/915d06b3-0dd4-4db9-85f3-00226a790632",
+    "dono_sanity": {
+      "perms_count": 31,
+      "modules": ["cadastros", "comercial", "contabil", "empresa", "estoque", "financeiro", "relatorios"],
+      "risk_badges_rendered": true
+    }
+  },
+  "rca of the issue": "Original bug was RLS on member_roles/member_scopes exposing only rows of the querying user, so the ver-como page saw zero rows when auditing another member. The fix routes reads through the SECURITY DEFINER RPC list_member_permissions via listMemberPermissionDetails, bypassing the row-owner restriction while keeping RLS intact for direct table access. Verified end-to-end on the preview URL."
+}

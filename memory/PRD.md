@@ -54,3 +54,17 @@ relatórios, DRE, estoque, propostas, funil de vendas.
   middleware não altera host/x-forwarded-host; sem rewrites.
 
 ## Credenciais de teste → ver /app/memory/test_credentials.md
+
+## Tarefa 4 — tela "ver como" corrigida — CONCLUÍDA e VERIFICADA (testing_agent iteration_5, 100%)
+- Bug: /pessoas/visao/[userId] mostrava "Sem permissões atribuídas" e só "Início" ao auditar
+  OUTRA pessoa. Causa: RLS de member_roles/member_scopes só libera linhas do próprio usuário
+  (anti-enumeração, deliberado) — consulta direta a outra pessoa retornava vazio.
+- Fix (sem afrouxar RLS): types trocado via git (migration 0007 → função list_member_permissions).
+  Nova função de dados src/lib/data/access.ts::listMemberPermissionDetails(tenantId,userId)
+  chama .rpc('list_member_permissions') (SECURITY DEFINER, valida access.manage no banco).
+  Tela reescrita: permissões agrupadas por módulo com label de negócio; risco sensivel/critico
+  destacado e separado; menu derivado de features × permissões (buildVisibleNav), igual ao real;
+  disclaimer deixando claro que a barra lateral é do auditor (viewas-disclaimer) e o menu da
+  pessoa fica numa "janela" emoldurada (viewas-menu-panel). Nenhum .rpc() em componente.
+- Verificado: Vendedor mostra 8 permissões (cadastros/comercial/financeiro), menu > só Início,
+  sem DRE nem Pessoas e acessos; Dono mostra 31 permissões com badges de risco.

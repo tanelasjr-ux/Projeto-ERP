@@ -77,3 +77,36 @@ export async function listMembers(tenantId: string): Promise<Member[]> {
     roles: m.roles ?? [],
   }));
 }
+
+export type MemberPermissionDetail = {
+  permissionKey: string;
+  module: string;
+  label: string;
+  description: string;
+  risk: string;
+  sortOrder: number;
+};
+
+// Permissões detalhadas de OUTRO membro. As políticas de RLS de member_roles/
+// member_scopes só liberam as linhas do próprio usuário (anti-enumeração), então
+// consultar as tabelas direto devolveria vazio. Esta função no banco é
+// SECURITY DEFINER e valida access.manage internamente antes de responder.
+export async function listMemberPermissionDetails(
+  tenantId: string,
+  userId: string,
+): Promise<MemberPermissionDetail[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("list_member_permissions", {
+    p_tenant: tenantId,
+    p_user: userId,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((p) => ({
+    permissionKey: p.permission_key,
+    module: p.module,
+    label: p.label,
+    description: p.description,
+    risk: p.risk,
+    sortOrder: p.sort_order,
+  }));
+}
