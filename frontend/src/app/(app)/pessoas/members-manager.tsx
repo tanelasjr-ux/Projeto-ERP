@@ -3,16 +3,21 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MoreHorizontal, UserPlus, Eye, Pencil, PauseCircle, PlayCircle, UserMinus } from "lucide-react";
+import { MoreHorizontal, UserPlus, Eye, Pencil, PauseCircle, PlayCircle, UserMinus, Copy, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { Member } from "@/lib/data/access";
 import type { TenantRole } from "@/lib/data/roles";
+import type { PendingInvitation } from "@/lib/data/invitations";
 import {
   inviteMemberAction,
   grantRoleAction,
   revokeRoleAction,
   setMemberStatusAction,
 } from "@/app/actions/access";
+import {
+  getInvitationTokenAction,
+  revokeInvitationAction,
+} from "@/app/actions/invitations";
 import { formatDateTimePtBR } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,11 +69,13 @@ export function MembersManager({
   currentUserId,
   members,
   roles,
+  pendingInvitations,
 }: {
   tenantId: string;
   currentUserId: string;
   members: Member[];
   roles: TenantRole[];
+  pendingInvitations: PendingInvitation[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -238,6 +245,8 @@ export function MembersManager({
           </TableBody>
         </Table>
       </div>
+
+      <PendingInvitesSection invites={pendingInvitations} />
 
       {/* Convidar */}
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
@@ -443,5 +452,180 @@ function EditRolesDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function PendingInvitesSection({ invites }: { invites: PendingInvitation[] }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [copyingId, setCopyingId] = useState<string | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState<PendingInvitation | null>(
+    null,
+  );
+
+  async function copyLink(inv: PendingInvitation) {
+    setCopyingId(inv.invitationId);
+    try {
+      const res = await getInvitationTokenAction(inv.invitationId);
+      if (!res.ok) {
+        toast.error("Não foi possível gerar o link. Tente novamente.");
+        return;
+      }
+      // Token usado só aqui, no momento do clique — não vai para estado nem tela.
+      const url = `${window.location.origin}/accept-invite?token=${res.token}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado. Envie para a pessoa por fora do sistema.");
+      } catch {
+        toast.error("Não foi possível copiar o link automaticamente.");
+      }
+    } catch {
+      toast.error("Não foi possível gerar o link. Tente novamente.");
+    } finally {
+      setCopyingId(null);
+    }
+  }
+
+  function revoke() {
+    if (!confirmRevoke) return;
+    const id = confirmRevoke.invitationId;
+    startTransition(async () => {
+      const res = await revokeInvitationAction(id);
+      if (!res.ok) {
+        toast.error("Falha ao revogar o convite.");
+        return;
+      }
+      toast.success("Convite revogado.");
+      setConfirmRevoke(null);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="space-y-3" data-testid="pending-invites-section">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">
+          Convites pendentes
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          O sistema ainda não envia e-mails: copie o link do convite e envie
+          você mesmo à pessoa.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>E-mail</TableHead>
+              <TableHead>Papel</TableHead>
+              <TableHead>Convidado em</TableHead>
+              <TableHead>Expira em</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invites.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center text-sm text-muted-foreground"
+                  data-testid="pending-invites-empty"
+                >
+                  Nenhum convite pendente.
+                </TableCell>
+              </TableRow>
+            ) : (
+              invites.map((inv) => (
+                <TableRow
+                  key={inv.invitationId}
+                  data-testid={`pending-invite-${inv.email}`}
+                >
+                  <TableCell className="font-medium">{inv.email}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{inv.roleName}</Badge>
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-muted-foreground">
+                    {formatDateTimePtBR(inv.invitedAt)}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">
+                        {formatDateTimePtBR(inv.expiresAt)}
+                      </span>
+                      {inv.expired ? (
+                        <Badge
+                          variant="warning"
+                          data-testid={`invite-expired-${inv.email}`}
+                        >
+                          <AlertCircle className="h-3 w-3" />
+                          Expirado
+                        </Badge>
+                      ) : null}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={copyingId === inv.invitationId}
+                        onClick={() => copyLink(inv)}
+                        data-testid={`copy-link-${inv.email}`}
+                      >
+                        {copyingId === inv.invitationId ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                        Copiar link
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setConfirmRevoke(inv)}
+                        data-testid={`revoke-invite-${inv.email}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Revogar
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog
+        open={!!confirmRevoke}
+        onOpenChange={(o) => (!o ? setConfirmRevoke(null) : null)}
+      >
+        <DialogContent data-testid="revoke-invite-dialog">
+          <DialogHeader>
+            <DialogTitle>Revogar convite</DialogTitle>
+            <DialogDescription>
+              O link de {confirmRevoke?.email} deixará de funcionar. Esta ação
+              não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmRevoke(null)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={revoke}
+              disabled={pending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="revoke-invite-confirm"
+            >
+              Revogar convite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

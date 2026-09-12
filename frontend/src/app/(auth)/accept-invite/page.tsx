@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { acceptInviteAction } from "@/app/actions/invitations";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -18,116 +15,127 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const schema = z
-  .object({
-    password: z.string().min(8, "A senha deve ter ao menos 8 caracteres"),
-    confirm: z.string(),
-  })
-  .refine((v) => v.password === v.confirm, {
-    message: "As senhas não conferem",
-    path: ["confirm"],
-  });
+// Guarda o token entre a ida ao login e a volta ao aceite, para não expô-lo na
+// URL do /login (o token só pode aparecer na URL do /accept-invite).
+const STORAGE_KEY = "pending_invite_token";
 
-type FormValues = z.infer<typeof schema>;
+type State = "working" | "invalid" | "network";
 
 export default function AcceptInvitePage() {
   const router = useRouter();
-  const supabase = createClient();
-  const [email, setEmail] = useState<string | null>(null);
-  const [hasSession, setHasSession] = useState<boolean | null>(null);
+  const [state, setState] = useState<State>("working");
+  const ranRef = useRef(false);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setHasSession(!!data.user);
-      setEmail(data.user?.email ?? null);
-    });
-  }, [supabase]);
+  const attempt = useCallback(async () => {
+    setState("working");
+    const supabase = createClient();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema) });
+    const urlToken = new URLSearchParams(window.location.search).get("token");
+    if (urlToken) sessionStorage.setItem(STORAGE_KEY, urlToken);
+    const token = urlToken ?? sessionStorage.getItem(STORAGE_KEY);
 
-  async function onSubmit(values: FormValues) {
-    const { error } = await supabase.auth.updateUser({
-      password: values.password,
-    });
-    if (error) {
-      toast.error("Não foi possível concluir. Peça um novo convite.");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      // Exige autenticação: manda ao login preservando o token (em
+      // sessionStorage) e volta ao aceite depois de entrar.
+      router.replace(`/login?next=${encodeURIComponent("/accept-invite")}`);
       return;
     }
-    toast.success("Acesso ativado. Bem-vindo(a)!");
-    router.push("/");
-    router.refresh();
+
+    if (!token) {
+      setState("invalid");
+      return;
+    }
+
+    const res = await acceptInviteAction(token);
+    if (res.ok) {
+      sessionStorage.removeItem(STORAGE_KEY);
+      router.replace("/");
+      router.refresh();
+      return;
+    }
+    if (res.reason === "auth") {
+      router.replace(`/login?next=${encodeURIComponent("/accept-invite")}`);
+      return;
+    }
+    setState(res.reason === "network" ? "network" : "invalid");
+  }, [router]);
+
+  useEffect(() => {
+    if (ranRef.current) return;
+    ranRef.current = true;
+    attempt();
+  }, [attempt]);
+
+  if (state === "working") {
+    return (
+      <Card data-testid="accept-invite-card">
+        <CardHeader>
+          <CardTitle className="text-xl">Aceitar convite</CardTitle>
+          <CardDescription>Ativando seu acesso…</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div
+            className="flex items-center gap-3 text-sm text-muted-foreground"
+            data-testid="accept-invite-working"
+          >
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Só um instante.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (state === "network") {
+    return (
+      <Card data-testid="accept-invite-card">
+        <CardHeader>
+          <CardTitle className="text-xl">Aceitar convite</CardTitle>
+          <CardDescription>Falha de conexão.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p
+            className="rounded-md bg-destructive/10 px-3 py-3 text-sm text-destructive"
+            data-testid="accept-invite-network"
+          >
+            Não foi possível conectar. Tente novamente em instantes.
+          </p>
+          <Button
+            className="w-full"
+            onClick={attempt}
+            data-testid="accept-invite-retry"
+          >
+            Tentar novamente
+          </Button>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
-    <Card data-testid="invite-card">
+    <Card data-testid="accept-invite-card">
       <CardHeader>
         <CardTitle className="text-xl">Aceitar convite</CardTitle>
-        <CardDescription>
-          {email
-            ? `Defina sua senha para ${email}.`
-            : "Defina sua senha para ativar o acesso."}
-        </CardDescription>
       </CardHeader>
-      <CardContent>
-        {hasSession === false ? (
-          <p
-            className="rounded-md bg-destructive/10 px-3 py-3 text-sm text-destructive"
-            data-testid="invite-no-session"
-          >
-            Convite inválido ou expirado. Solicite um novo convite ao
-            administrador.
-          </p>
-        ) : (
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
-            data-testid="invite-form"
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                autoFocus
-                data-testid="invite-password-input"
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-xs text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="confirm">Confirmar senha</Label>
-              <Input
-                id="confirm"
-                type="password"
-                autoComplete="new-password"
-                data-testid="invite-confirm-input"
-                {...register("confirm")}
-              />
-              {errors.confirm && (
-                <p className="text-xs text-destructive">
-                  {errors.confirm.message}
-                </p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-              data-testid="invite-submit-button"
-            >
-              {isSubmitting ? "Ativando..." : "Ativar acesso"}
-            </Button>
-          </form>
-        )}
+      <CardContent className="space-y-4">
+        <p
+          className="rounded-md bg-destructive/10 px-3 py-3 text-sm text-destructive"
+          data-testid="accept-invite-error"
+        >
+          Convite inválido ou expirado
+        </p>
+        <Button
+          asChild
+          variant="outline"
+          className="w-full"
+          data-testid="accept-invite-home-link"
+        >
+          <Link href="/">Ir para o início</Link>
+        </Button>
       </CardContent>
     </Card>
   );

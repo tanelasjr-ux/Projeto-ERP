@@ -58,7 +58,13 @@ export default function LoginPage() {
         );
         return;
       }
-      router.push("/");
+      // Volta ao destino preservado (ex.: /accept-invite) quando houver.
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const dest =
+        nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
+          ? nextParam
+          : "/";
+      router.push(dest);
       router.refresh();
     } catch {
       // Erro de transporte lançado (ex.: "Failed to fetch"/ERR_FAILED).

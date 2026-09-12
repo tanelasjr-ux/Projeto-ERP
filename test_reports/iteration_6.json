@@ -15,7 +15,7 @@
   "test_evidence": {
     "login_invalid_credentials": {"data-testid=login-error": "E-mail ou senha inválidos", "pass": true},
     "login_network_blocked": {"data-testid=login-error": "Não foi possível conectar. Tente novamente em instantes.", "pass": true, "method": "page.route abort of **/auth/v1/** and **://*.supabase.co/**"},
-    "login_success": {"navigated_to": "https://erp-preview-28.preview.emergentagent.com/", "pass": true},
+    "login_success": {"navigated_to": "https://company-invite.preview.emergentagent.com/", "pass": true},
     "company_switcher_add": {"company-add-btn_present": true, "navigated_to": "/assistente", "pass": true},
     "menu_config": {"has_Pessoas_e_acessos": true, "has_Assistente_inicial": false, "pass": true},
     "forgot_password_network": {"data-testid=forgot-network-error": "Não foi possível conectar. Tente novamente em instantes.", "pass": true},

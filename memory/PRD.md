@@ -1,84 +1,41 @@
-# Projeto-ERP — PRD / Memória
+# ERP Financeiro — PRD (memória viva)
 
-## Problema / contexto
-ERP financeiro para donos de empresa (não contadores). Next.js 15 (App Router) +
-TypeScript + Tailwind + shadcn/ui. Dados e auth 100% via Supabase
-(@supabase/supabase-js + @supabase/ssr). SEM backend próprio. Toda regra de
-negócio vive no banco (funções SQL / RPC SECURITY DEFINER). RLS ativa + filtro
-explícito por tenant_id em toda consulta. Idioma pt-BR, fuso America/Sao_Paulo.
+## Contexto / Arquitetura (regras permanentes)
+- Frontend Next.js 15 (App Router), TS, Tailwind, shadcn/ui, @supabase/ssr, TanStack Query/Table, react-hook-form + zod, Recharts.
+- Banco Supabase Postgres JÁ EXISTE (8 migrations, 16 tabelas, RLS). NÃO criar banco/tabelas/migrations. Sem MongoDB/Prisma/ORM.
+- Sem backend próprio: `/app/backend/server.py` é ASGI vazio só para o supervisor. Frontend nunca o chama.
+- Toda regra de negócio no banco (funções SQL via `.rpc()`). Camada de dados em `src/lib/data/`; componentes nunca chamam `supabase.from()/.rpc()` direto.
+- Só a chave publicável (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). Nunca service_role/sb_secret_/connection string.
+- Tipos em `src/types/database.types.ts` — espelho gerado do schema; NUNCA editar à mão. Se faltar algo, PARAR e perguntar (regenerar do schema).
+- pt-BR, fuso America/Sao_Paulo. Dinheiro só formatado no front; cálculo sempre no banco.
+- Env do preview atrás de proxy: host precisa estar em `experimental.serverActions.allowedOrigins` (next.config.mjs) senão "Invalid Server Actions request".
 
-## Arquitetura (regras permanentes)
-- Camada de dados em src/lib/data/ (única a chamar supabase.from()).
-- Componentes/telas nunca chamam .from() nem .rpc() direto.
-- Server actions em src/app/actions/ usam cliente por-requisição (@supabase/ssr,
-  lê cookies) e delegam autorização ao banco.
-- Única chave permitida: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Proibido
-  service_role / sb_secret_ / string de conexão.
-- Sem aritmética de dinheiro em JS (cálculo vem do banco; front só formata pt-BR).
-- Tipos reais em src/types/database.types.ts (16 tabelas + RPCs).
-- backend/server.py = stub ASGI mínimo só para o supervisor (sem framework, sem
-  Supabase, sem env de banco, frontend nunca chama). Config do supervisor é
-  READONLY/gerenciada pela plataforma — não removível de forma permanente.
+## Já existia e testado (prompts anteriores)
+- Auth completa (mensagens genéricas anti-enumeração; distinção credencial inválida x rede).
+- Camada de dados `src/lib/data/` e server actions `src/app/actions/`.
+- App shell (sidebar, seletor de empresa, menu dinâmico por tenant_features x permissões, branding por empresa).
+- Assistente de primeiro acesso (`provision_tenant`).
+- Pessoas e Acessos + "ver o sistema como esta pessoa vê" (`list_member_permissions`).
 
-## Já implementado (Prompt 1)
-- Auth: login, recuperação de senha, reset, aceite de convite, /auth/confirm,
-  middleware, mensagens genéricas anti-enumeração.
-- Camada de dados: access, branding, features, permissions-catalog, provisioning,
-  roles, tenants.
-- Server actions: access, provisioning, tenant.
-- App shell: sidebar, header, seletor de empresa, menu dinâmico, branding por tenant.
-- Assistente de primeiro acesso (/assistente) → provision_tenant() (6 perguntas).
-- Pessoas e Acessos + pré-visualização "ver como esta pessoa vê".
+## Implementado nesta sessão (aceite de convite)
+Funções do banco usadas (confirmadas no database.types.ts, 785 linhas, origin/main commit b6fbdd5):
+`accept_invitation`, `list_pending_invitations`, `invitation_token`, `revoke_invitation`.
 
-## Auditoria (Tarefa 1) — CONCLUÍDA e APROVADA
-- git grep service_role/sb_secret_/postgresql:// → vazio. supabase.from fora de
-  /lib/data → vazio. Sem select *. Build/typecheck OK. /login → 200.
-- role_permissions NÃO tem tenant_id (PK composta role_id+permission_key) →
-  filtro por role_id derivado de member_roles (já por tenant) é o correto. Mantido.
+- Camada de dados: `src/lib/data/invitations.ts` (acceptInvitation, listPendingInvitations, getInvitationToken, revokeInvitation).
+- Server actions: `src/app/actions/invitations.ts` (acceptInviteAction seta cookie active_tenant; getInvitationTokenAction; revokeInvitationAction).
+- Rota `/accept-invite`: lê `?token`, exige auth (redireciona a `/login?next=/accept-invite` preservando o token em sessionStorage, fora da URL do login), aceita via camada de dados, sucesso→home dentro da empresa, erro→"Convite inválido ou expirado" (rede é mensagem separada + retry).
+- Login: honra `?next=` interno após entrar.
+- Pessoas (`members-manager.tsx`): seção "Convites pendentes" — e-mail, papel, convidado em, expira em, marca "Expirado" (campo `expired`). Botões "Copiar link" (chama `invitation_token` só no clique) e "Revogar" (confirmação → `revoke_invitation` → refresh). Linha sobre não envio de e-mail. OK em 375px.
+- `frontend/.env` criado com URL + chave publicável (git-ignorado).
+- next.config.mjs: host atual do preview (cluster-5) adicionado em allowedOrigins/allowedDevOrigins.
 
-## Correções (Tarefa 2) — CONCLUÍDAS e VERIFICADAS (testing_agent iteration_3, 5/5)
-1. Removido placeholder órfão src/lib/database.types.ts (não era importado).
-2. touch_member movido de (app)/layout.tsx para touchMember() em lib/data/access.ts.
-3. Falso positivo do comentário resolvido (arquivo removido no item 1).
+### Verificado (browser, conta de teste)
+- Copiar link: RPC ok, clipboard recebe `/accept-invite?token=<uuid>`, toast; sem 500/403.
+- Revogar: dialog de confirmação abre.
+- /accept-invite deslogado → redirect login preservando token (fora da URL) → volta ao aceite após login.
+- Token inválido → exatamente "Convite inválido ou expirado".
+- 375px: sem scroll horizontal de página; tabela contida/rolável.
+- NÃO consumido um convite real válido (evitar alterar dados de teste) — caminho de sucesso fica para a verificação manual do usuário.
 
-## Tarefa 5 — parcial
-- Item 2 (Adicionar empresa vs Assistente) — CONCLUÍDO e VERIFICADO (iteration_6, 100%).
-  "Assistente inicial" removido de nav.ts grupo config; "Adicionar empresa" (company-add-btn)
-  dentro do CompanySwitcher → router.push('/assistente'). Switcher agora sempre é dropdown.
-- Item 3 (credencial inválida vs falha de rede) — CONCLUÍDO e VERIFICADO (iteration_6, 100%).
-  Novo src/lib/auth-errors.ts::classifyAuthError (AuthApiError 400=invalid-credentials;
-  AuthRetryableFetchError/status 0/>=500/TypeError=network). Aplicado em login e forgot-password.
-  Login: 400 -> "E-mail ou senha inválidos"; senão "Não foi possível conectar. Tente novamente
-  em instantes.". Forgot: só rede mostra aviso (forgot-network-error); resto = sucesso genérico.
-- Item 1 (ligar aceite de convite) — BLOQUEADO no banco. Falta: RPC para listar convites
-  pendentes (com token/email/papel/expires_at), RPC para revogar, e garantia de que
-  accept_invitation valida e-mail internamente + o que a string de retorno representa.
-  invitations não é legível direto (RLS). Aguardando decisões do dono.
-
-## Backlog (NÃO construir até liberar — dependem da Fase 1 do banco, inexistente)
-Contas a pagar/receber, parceiros, itens, contas bancárias, conciliação,
-relatórios, DRE, estoque, propostas, funil de vendas.
-
-## Correção de proxy (Server Actions) — CONCLUÍDA e VERIFICADA (testing_agent iteration_4, 100%)
-- Bug: "Invalid Server Actions request" ao abrir /pessoas pela URL de preview (checagem CSRF
-  origin/host do Next 15 atrás do proxy; next.config.mjs tinha hosts antigos).
-- Fix: next.config.mjs experimental.serverActions.allowedOrigins atualizado com o host atual
-  (erp-preview-28.preview.emergentagent.com) + wildcards *.preview.emergentagent.com,
-  *.preview.emergentcf.cloud, *.cluster-12.preview.emergentcf.cloud e localhost:3000.
-  middleware não altera host/x-forwarded-host; sem rewrites.
-
-## Credenciais de teste → ver /app/memory/test_credentials.md
-
-## Tarefa 4 — tela "ver como" corrigida — CONCLUÍDA e VERIFICADA (testing_agent iteration_5, 100%)
-- Bug: /pessoas/visao/[userId] mostrava "Sem permissões atribuídas" e só "Início" ao auditar
-  OUTRA pessoa. Causa: RLS de member_roles/member_scopes só libera linhas do próprio usuário
-  (anti-enumeração, deliberado) — consulta direta a outra pessoa retornava vazio.
-- Fix (sem afrouxar RLS): types trocado via git (migration 0007 → função list_member_permissions).
-  Nova função de dados src/lib/data/access.ts::listMemberPermissionDetails(tenantId,userId)
-  chama .rpc('list_member_permissions') (SECURITY DEFINER, valida access.manage no banco).
-  Tela reescrita: permissões agrupadas por módulo com label de negócio; risco sensivel/critico
-  destacado e separado; menu derivado de features × permissões (buildVisibleNav), igual ao real;
-  disclaimer deixando claro que a barra lateral é do auditor (viewas-disclaimer) e o menu da
-  pessoa fica numa "janela" emoldurada (viewas-menu-panel). Nenhum .rpc() em componente.
-- Verificado: Vendedor mostra 8 permissões (cadastros/comercial/financeiro), menu > só Início,
-  sem DRE nem Pessoas e acessos; Dono mostra 31 permissões com badges de risco.
+## Backlog / fora de escopo (não construir sem pedido)
+- Fase 1, cadastros, contas a pagar/receber, conciliação, relatórios, estoque, propostas, funil.

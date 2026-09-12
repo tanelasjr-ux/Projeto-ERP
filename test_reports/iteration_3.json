@@ -19,6 +19,6 @@
   "seed_data_creation": "None. Invite/grant flows were NOT exercised in this iteration (per request: non-destructive regression only).",
   "retest_needed": false,
   "main_agent_can_self_test": true,
-  "context_for_next_testing_agent": "Refactor validated. next.config.mjs still contains the serverActions.allowedOrigins fix from iteration_2 (needed for invite/grant/revoke/status server actions through the preview ingress). Preview URL used: https://dcd5b2bc-5205-428d-b88f-5ddf86af98dc.preview.emergentagent.com. The Next dev indicator (`nextjs-portal` element) is always present in DOM — do not treat it as an error; check for `[data-nextjs-dialog-overlay]` or actual `.error` text instead.",
+  "context_for_next_testing_agent": "Refactor validated. next.config.mjs still contains the serverActions.allowedOrigins fix from iteration_2 (needed for invite/grant/revoke/status server actions through the preview ingress). Preview URL used: https://company-invite.preview.emergentagent.com. The Next dev indicator (`nextjs-portal` element) is always present in DOM — do not treat it as an error; check for `[data-nextjs-dialog-overlay]` or actual `.error` text instead.",
   "rca of the issue": "No issue found; refactor is a true non-regression."
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireActiveTenant } from "@/lib/server-context";
 import { getMyPermissions, listMembers } from "@/lib/data/access";
 import { listTenantRoles } from "@/lib/data/roles";
+import { listPendingInvitations } from "@/lib/data/invitations";
 import { MembersManager } from "./members-manager";
 import { ShieldAlert } from "lucide-react";
 
@@ -24,9 +25,10 @@ export default async function PessoasPage() {
     );
   }
 
-  const [members, roles] = await Promise.all([
+  const [members, roles, pendingInvitations] = await Promise.all([
     listMembers(tenantId),
     listTenantRoles(tenantId),
+    listPendingInvitations(tenantId),
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function PessoasPage() {
       currentUserId={userId}
       members={members}
       roles={roles}
+      pendingInvitations={pendingInvitations}
     />
   );
 }

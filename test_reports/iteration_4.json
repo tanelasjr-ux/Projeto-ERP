@@ -1,5 +1,5 @@
 {
-  "summary": "Verified via external preview URL (https://erp-preview-28.preview.emergentagent.com) that the next.config.mjs allowedOrigins fix eliminates the 'Invalid Server Actions request' error on /pessoas and that the invite server action executes end-to-end.",
+  "summary": "Verified via external preview URL (https://company-invite.preview.emergentagent.com) that the next.config.mjs allowedOrigins fix eliminates the 'Invalid Server Actions request' error on /pessoas and that the invite server action executes end-to-end.",
   "backend_issues": {"critical": [], "minor": []},
   "frontend_issues": {
     "ui_bugs": [],
