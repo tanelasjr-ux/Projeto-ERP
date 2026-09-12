@@ -23,3 +23,25 @@ export async function requireActiveTenant(): Promise<{
 
   return { userId: user.id, tenantId };
 }
+
+// Igual ao anterior, mas para server actions: lança em vez de redirecionar e
+// nunca confia em tenant vindo do cliente (lê da sessão + cookie).
+export async function resolveActiveTenant(): Promise<{
+  userId: string;
+  tenantId: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Não autenticado");
+
+  const tenants = await listMyTenants();
+  if (tenants.length === 0) throw new Error("Sem empresa ativa");
+
+  const cookie = await getActiveTenantCookie();
+  const tenantId =
+    cookie && tenants.some((t) => t.id === cookie) ? cookie : tenants[0].id;
+
+  return { userId: user.id, tenantId };
+}
