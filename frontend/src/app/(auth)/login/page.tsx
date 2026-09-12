@@ -7,6 +7,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import {
+  classifyAuthError,
+  INVALID_CREDENTIALS_MESSAGE,
+  NETWORK_MESSAGE,
+} from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,17 +43,27 @@ export default function LoginPage() {
 
   async function onSubmit(values: FormValues) {
     setError("");
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
-    if (error) {
-      // Mensagem sempre genérica — nunca revela se a conta existe.
-      setError("E-mail ou senha inválidos");
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      if (error) {
+        // 400 = credencial inválida (mensagem genérica, não revela a conta).
+        // Qualquer falha de rede/serviço vira a mensagem de conexão.
+        setError(
+          classifyAuthError(error) === "invalid-credentials"
+            ? INVALID_CREDENTIALS_MESSAGE
+            : NETWORK_MESSAGE,
+        );
+        return;
+      }
+      router.push("/");
+      router.refresh();
+    } catch {
+      // Erro de transporte lançado (ex.: "Failed to fetch"/ERR_FAILED).
+      setError(NETWORK_MESSAGE);
     }
-    router.push("/");
-    router.refresh();
   }
 
   return (

@@ -1,0 +1,24 @@
+{
+  "summary": "Validated both fixes (login/forgot-password error classification and Assistente/company-switcher relocation) via Playwright against the preview URL. All 6 scenarios PASS.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "teste@exemplo.com / 123456",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All fixes for iteration 6 verified. classifyAuthError branches (status 400 -> invalid-credentials; TypeError/AuthRetryableFetchError/status 0 -> network) are exercised correctly by login and forgot-password pages. Company switcher shows 'Adicionar empresa' (data-testid=company-add-btn) that routes to /assistente. nav.ts config group only contains 'pessoas' (Pessoas e acessos); 'Assistente inicial' is fully removed from the side menu.",
+  "test_evidence": {
+    "login_invalid_credentials": {"data-testid=login-error": "E-mail ou senha inválidos", "pass": true},
+    "login_network_blocked": {"data-testid=login-error": "Não foi possível conectar. Tente novamente em instantes.", "pass": true, "method": "page.route abort of **/auth/v1/** and **://*.supabase.co/**"},
+    "login_success": {"navigated_to": "https://erp-preview-28.preview.emergentagent.com/", "pass": true},
+    "company_switcher_add": {"company-add-btn_present": true, "navigated_to": "/assistente", "pass": true},
+    "menu_config": {"has_Pessoas_e_acessos": true, "has_Assistente_inicial": false, "pass": true},
+    "forgot_password_network": {"data-testid=forgot-network-error": "Não foi possível conectar. Tente novamente em instantes.", "pass": true},
+    "forgot_password_success": {"data-testid=forgot-success": "Se este e-mail estiver cadastrado, enviamos as instruções.", "pass": true}
+  }
+}

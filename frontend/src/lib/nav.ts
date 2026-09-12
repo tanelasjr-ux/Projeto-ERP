@@ -176,15 +176,6 @@ const REGISTRY: NavGroup[] = [
         permissionKey: "access.manage",
         implemented: true,
       },
-      {
-        key: "assistente",
-        label: "Assistente inicial",
-        href: "/assistente",
-        icon: "wand",
-        featureKey: null,
-        permissionKey: "company.manage",
-        implemented: true,
-      },
     ],
   },
 ];

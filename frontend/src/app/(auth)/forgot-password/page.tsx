@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/client";
+import { classifyAuthError, NETWORK_MESSAGE } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ type FormValues = z.infer<typeof schema>;
 export default function ForgotPasswordPage() {
   const supabase = createClient();
   const [sent, setSent] = useState(false);
+  const [netError, setNetError] = useState("");
 
   const {
     register,
@@ -34,12 +36,21 @@ export default function ForgotPasswordPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   async function onSubmit(values: FormValues) {
-    // Dispara o e-mail, mas ignora o resultado para a mensagem — nunca revela
-    // se a conta existe.
-    await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
-    });
-    setSent(true);
+    setNetError("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
+      });
+      // Só falha de rede/serviço vira aviso. Existência da conta nunca é
+      // revelada: para qualquer outro resultado mostramos a mesma mensagem.
+      if (error && classifyAuthError(error) === "network") {
+        setNetError(NETWORK_MESSAGE);
+        return;
+      }
+      setSent(true);
+    } catch {
+      setNetError(NETWORK_MESSAGE);
+    }
   }
 
   return (
@@ -87,6 +98,14 @@ export default function ForgotPasswordPage() {
                 </p>
               )}
             </div>
+            {netError && (
+              <p
+                className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                data-testid="forgot-network-error"
+              >
+                {netError}
+              </p>
+            )}
             <Button
               type="submit"
               className="w-full"

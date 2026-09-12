@@ -41,6 +41,20 @@ explícito por tenant_id em toda consulta. Idioma pt-BR, fuso America/Sao_Paulo.
 2. touch_member movido de (app)/layout.tsx para touchMember() em lib/data/access.ts.
 3. Falso positivo do comentário resolvido (arquivo removido no item 1).
 
+## Tarefa 5 — parcial
+- Item 2 (Adicionar empresa vs Assistente) — CONCLUÍDO e VERIFICADO (iteration_6, 100%).
+  "Assistente inicial" removido de nav.ts grupo config; "Adicionar empresa" (company-add-btn)
+  dentro do CompanySwitcher → router.push('/assistente'). Switcher agora sempre é dropdown.
+- Item 3 (credencial inválida vs falha de rede) — CONCLUÍDO e VERIFICADO (iteration_6, 100%).
+  Novo src/lib/auth-errors.ts::classifyAuthError (AuthApiError 400=invalid-credentials;
+  AuthRetryableFetchError/status 0/>=500/TypeError=network). Aplicado em login e forgot-password.
+  Login: 400 -> "E-mail ou senha inválidos"; senão "Não foi possível conectar. Tente novamente
+  em instantes.". Forgot: só rede mostra aviso (forgot-network-error); resto = sucesso genérico.
+- Item 1 (ligar aceite de convite) — BLOQUEADO no banco. Falta: RPC para listar convites
+  pendentes (com token/email/papel/expires_at), RPC para revogar, e garantia de que
+  accept_invitation valida e-mail internamente + o que a string de retorno representa.
+  invitations não é legível direto (RLS). Aguardando decisões do dono.
+
 ## Backlog (NÃO construir até liberar — dependem da Fase 1 do banco, inexistente)
 Contas a pagar/receber, parceiros, itens, contas bancárias, conciliação,
 relatórios, DRE, estoque, propostas, funil de vendas.
