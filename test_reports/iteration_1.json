@@ -18,6 +18,6 @@
   "seed_data_creation": "None",
   "retest_needed": false,
   "main_agent_can_self_test": true,
-  "context_for_next_testing_agent": "Next.js 15 App Router on port 3000 via supervisor. Preview URL: https://663da870-3bec-43c9-8a49-3712a1a956fb.preview.emergentagent.com . Supabase cookie-based auth working end-to-end. data-testids in use: login-error, login-forgot-link, forgot-email-input, forgot-submit-button, forgot-success, home-greeting, header-user-email, sign-out-button. Email/password inputs and submit button on /login do NOT have documented data-testids (used generic input[type=email]/[type=password]/button[type=submit] selectors successfully). Consider adding login-email-input/login-password-input/login-submit-button testids when expanding coverage.",
+  "context_for_next_testing_agent": "Next.js 15 App Router on port 3000 via supervisor. Preview URL: https://erp-preview-28.preview.emergentagent.com . Supabase cookie-based auth working end-to-end. data-testids in use: login-error, login-forgot-link, forgot-email-input, forgot-submit-button, forgot-success, home-greeting, header-user-email, sign-out-button. Email/password inputs and submit button on /login do NOT have documented data-testids (used generic input[type=email]/[type=password]/button[type=submit] selectors successfully). Consider adding login-email-input/login-password-input/login-submit-button testids when expanding coverage.",
   "rca of the issue": "N/A — no bugs found."
 }
