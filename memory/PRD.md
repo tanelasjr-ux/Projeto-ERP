@@ -45,4 +45,12 @@ explícito por tenant_id em toda consulta. Idioma pt-BR, fuso America/Sao_Paulo.
 Contas a pagar/receber, parceiros, itens, contas bancárias, conciliação,
 relatórios, DRE, estoque, propostas, funil de vendas.
 
+## Correção de proxy (Server Actions) — CONCLUÍDA e VERIFICADA (testing_agent iteration_4, 100%)
+- Bug: "Invalid Server Actions request" ao abrir /pessoas pela URL de preview (checagem CSRF
+  origin/host do Next 15 atrás do proxy; next.config.mjs tinha hosts antigos).
+- Fix: next.config.mjs experimental.serverActions.allowedOrigins atualizado com o host atual
+  (erp-preview-28.preview.emergentagent.com) + wildcards *.preview.emergentagent.com,
+  *.preview.emergentcf.cloud, *.cluster-12.preview.emergentcf.cloud e localhost:3000.
+  middleware não altera host/x-forwarded-host; sem rewrites.
+
 ## Credenciais de teste → ver /app/memory/test_credentials.md

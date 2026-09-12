@@ -1,0 +1,30 @@
+{
+  "summary": "Verified via external preview URL (https://erp-preview-28.preview.emergentagent.com) that the next.config.mjs allowedOrigins fix eliminates the 'Invalid Server Actions request' error on /pessoas and that the invite server action executes end-to-end.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "test_credentials": "teste@exemplo.com / 123456 (Supabase Auth, Dono of Empresa Teste LTDA)",
+  "seed_data_creation": "None; used timestamp-suffixed invite email vendedor.teste+<ts>@exemplo.com",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "The CSRF/allowedOrigins fix for Next 15 Server Actions is confirmed working behind the preview proxy. /pessoas renders the MembersManager with the owner row (teste@exemplo.com - Dono - Ativo). Invite dialog opens correctly, the role select lists 'Vendedor' (plus Almoxarifado, Compras, Contador, Dono, Financeiro, Gerente, Somente leitura). Submitting the invite closes the dialog with no 'Invalid Server Actions request' or Runtime Error appearing, which proves the server action executed. Note: Sonner toast auto-dismisses fast; dialog auto-close after submit is the reliable success signal from the UI. Login occasionally needs a retry (Supabase client-side signInWithPassword flakiness in headless), so wrap in a retry loop when re-testing.",
+  "test_evidence": {
+    "pessoas_no_csrf_error": true,
+    "owner_row_rendered": true,
+    "invite_dialog_opens": true,
+    "vendedor_option_present": true,
+    "submit_no_csrf_error": true,
+    "dialog_closed_after_submit": true,
+    "success_toast_captured_text": false,
+    "note_on_toast": "Toast was not captured as text (rapid auto-dismiss during polling), but dialog closing + zero 'Invalid Server Actions request' occurrences during and after submission demonstrate the server action executed successfully. Per review request, absence-of-error is the acceptance criterion."
+  },
+  "rca of the issue": "Not applicable - regression verification of a previously applied fix in frontend/next.config.mjs (experimental.serverActions.allowedOrigins updated to include current preview host and wildcards). Fix confirmed effective through the reverse proxy."
+}
