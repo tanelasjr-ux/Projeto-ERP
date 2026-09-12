@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      _f1: {
+        Row: {
+          k: string
+          v: string | null
+        }
+        Insert: {
+          k: string
+          v?: string | null
+        }
+        Update: {
+          k?: string
+          v?: string | null
+        }
+        Relationships: []
+      }
+      _f1_res: {
+        Row: {
+          esperado: string | null
+          n: number
+          obtido: string | null
+          ok: string | null
+          verificacao: string | null
+        }
+        Insert: {
+          esperado?: string | null
+          n: number
+          obtido?: string | null
+          ok?: string | null
+          verificacao?: string | null
+        }
+        Update: {
+          esperado?: string | null
+          n?: number
+          obtido?: string | null
+          ok?: string | null
+          verificacao?: string | null
+        }
+        Relationships: []
+      }
       account_balances: {
         Row: {
           account_id: string
@@ -62,6 +101,7 @@ export type Database = {
           parent_code: string | null
           report_group: string | null
           sort_order: number
+          system_role: string | null
         }
         Insert: {
           code: string
@@ -75,6 +115,7 @@ export type Database = {
           parent_code?: string | null
           report_group?: string | null
           sort_order?: number
+          system_role?: string | null
         }
         Update: {
           code?: string
@@ -88,6 +129,7 @@ export type Database = {
           parent_code?: string | null
           report_group?: string | null
           sort_order?: number
+          system_role?: string | null
         }
         Relationships: [
           {
@@ -112,6 +154,7 @@ export type Database = {
           parent_id: string | null
           report_group: string | null
           sort_order: number
+          system_role: string | null
           tenant_id: string
         }
         Insert: {
@@ -127,6 +170,7 @@ export type Database = {
           parent_id?: string | null
           report_group?: string | null
           sort_order?: number
+          system_role?: string | null
           tenant_id: string
         }
         Update: {
@@ -142,6 +186,7 @@ export type Database = {
           parent_id?: string | null
           report_group?: string | null
           sort_order?: number
+          system_role?: string | null
           tenant_id?: string
         }
         Relationships: [
@@ -194,6 +239,146 @@ export type Database = {
           tenant_id?: string | null
         }
         Relationships: []
+      }
+      bank_accounts: {
+        Row: {
+          account_id: string
+          bank_code: string | null
+          branch: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          number: string | null
+          opening_balance: number
+          tenant_id: string
+        }
+        Insert: {
+          account_id: string
+          bank_code?: string | null
+          branch?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          number?: string | null
+          opening_balance?: number
+          tenant_id: string
+        }
+        Update: {
+          account_id?: string
+          bank_code?: string | null
+          branch?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          number?: string | null
+          opening_balance?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_account_id_fkey"
+            columns: ["account_id"]
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          accrual_entry_id: string | null
+          canceled_at: string | null
+          category_account_id: string | null
+          competence_date: string
+          created_at: string
+          created_by: string | null
+          description: string
+          doc_number: string | null
+          id: string
+          issue_date: string
+          kind: Database["public"]["Enums"]["doc_kind"]
+          notes: string | null
+          partner_id: string
+          status: Database["public"]["Enums"]["doc_status"]
+          tenant_id: string
+          total_amount: number
+        }
+        Insert: {
+          accrual_entry_id?: string | null
+          canceled_at?: string | null
+          category_account_id?: string | null
+          competence_date: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          doc_number?: string | null
+          id?: string
+          issue_date: string
+          kind: Database["public"]["Enums"]["doc_kind"]
+          notes?: string | null
+          partner_id: string
+          status?: Database["public"]["Enums"]["doc_status"]
+          tenant_id: string
+          total_amount: number
+        }
+        Update: {
+          accrual_entry_id?: string | null
+          canceled_at?: string | null
+          category_account_id?: string | null
+          competence_date?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          doc_number?: string | null
+          id?: string
+          issue_date?: string
+          kind?: Database["public"]["Enums"]["doc_kind"]
+          notes?: string | null
+          partner_id?: string
+          status?: Database["public"]["Enums"]["doc_status"]
+          tenant_id?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_accrual_entry_id_fkey"
+            columns: ["accrual_entry_id"]
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_category_account_id_fkey"
+            columns: ["category_account_id"]
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_partner_id_fkey"
+            columns: ["partner_id"]
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       domain_events: {
         Row: {
@@ -331,6 +516,52 @@ export type Database = {
         }
         Relationships: []
       }
+      installments: {
+        Row: {
+          amount: number
+          balance: number
+          document_id: string
+          due_date: string
+          id: string
+          seq: number
+          status: Database["public"]["Enums"]["doc_status"]
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          balance: number
+          document_id: string
+          due_date: string
+          id?: string
+          seq: number
+          status?: Database["public"]["Enums"]["doc_status"]
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          balance?: number
+          document_id?: string
+          due_date?: string
+          id?: string
+          seq?: number
+          status?: Database["public"]["Enums"]["doc_status"]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installments_document_id_fkey"
+            columns: ["document_id"]
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "installments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invitations: {
         Row: {
           accepted_at: string | null
@@ -380,6 +611,58 @@ export type Database = {
           },
           {
             foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      items: {
+        Row: {
+          code: string | null
+          cost_price: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          kind: string
+          name: string
+          notes: string | null
+          sale_price: number | null
+          tenant_id: string
+          unit: string
+        }
+        Insert: {
+          code?: string | null
+          cost_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name: string
+          notes?: string | null
+          sale_price?: number | null
+          tenant_id: string
+          unit?: string
+        }
+        Update: {
+          code?: string | null
+          cost_price?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          kind?: string
+          name?: string
+          notes?: string | null
+          sale_price?: number | null
+          tenant_id?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_tenant_id_fkey"
             columns: ["tenant_id"]
             referencedRelation: "tenants"
             referencedColumns: ["id"]
@@ -595,6 +878,70 @@ export type Database = {
           },
         ]
       }
+      partners: {
+        Row: {
+          address: NonNullable<Json>
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_active: boolean
+          is_customer: boolean
+          is_supplier: boolean
+          kind: string
+          legal_name: string
+          notes: string | null
+          payment_terms: NonNullable<Json>
+          phone: string | null
+          tax_id: string | null
+          tenant_id: string
+          trade_name: string | null
+        }
+        Insert: {
+          address?: NonNullable<Json>
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_customer?: boolean
+          is_supplier?: boolean
+          kind?: string
+          legal_name: string
+          notes?: string | null
+          payment_terms?: NonNullable<Json>
+          phone?: string | null
+          tax_id?: string | null
+          tenant_id: string
+          trade_name?: string | null
+        }
+        Update: {
+          address?: NonNullable<Json>
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          is_customer?: boolean
+          is_supplier?: boolean
+          kind?: string
+          legal_name?: string
+          notes?: string | null
+          payment_terms?: NonNullable<Json>
+          phone?: string | null
+          tax_id?: string | null
+          tenant_id?: string
+          trade_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permissions: {
         Row: {
           description: string
@@ -736,6 +1083,79 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settlements: {
+        Row: {
+          amount: number
+          bank_account_id: string
+          created_at: string
+          created_by: string | null
+          discount: number
+          fine: number
+          id: string
+          installment_id: string
+          interest: number
+          journal_entry_id: string | null
+          notes: string | null
+          settled_at: string
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          bank_account_id: string
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          fine?: number
+          id?: string
+          installment_id: string
+          interest?: number
+          journal_entry_id?: string | null
+          notes?: string | null
+          settled_at: string
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string
+          created_at?: string
+          created_by?: string | null
+          discount?: number
+          fine?: number
+          id?: string
+          installment_id?: string
+          interest?: number
+          journal_entry_id?: string | null
+          notes?: string | null
+          settled_at?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlements_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_installment_id_fkey"
+            columns: ["installment_id"]
+            referencedRelation: "installments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settlements_tenant_id_fkey"
             columns: ["tenant_id"]
             referencedRelation: "tenants"
             referencedColumns: ["id"]
@@ -936,9 +1356,40 @@ export type Database = {
     Functions: {
       accept_invitation: { Args: { p_token: string }; Returns: string }
       accept_my_invitation: { Args: { p_invitation: string }; Returns: string }
+      bank_balances: {
+        Args: { p_tenant: string }
+        Returns: {
+          balance: number
+          bank_account_id: string
+          kind: string
+          name: string
+        }[]
+      }
+      cancel_document: {
+        Args: { p_document: string; p_reason: string }
+        Returns: undefined
+      }
       close_period: {
         Args: { p_month: number; p_tenant: string; p_year: number }
         Returns: undefined
+      }
+      create_document: {
+        Args: {
+          p_category?: string
+          p_competence_date: string
+          p_description: string
+          p_doc_number?: string
+          p_first_due?: string
+          p_installments?: number
+          p_interval_days?: number
+          p_issue_date: string
+          p_kind: Database["public"]["Enums"]["doc_kind"]
+          p_notes?: string
+          p_partner: string
+          p_tenant: string
+          p_total: number
+        }
+        Returns: string
       }
       get_public_branding: {
         Args: { p_slug: string }
@@ -1045,9 +1496,40 @@ export type Database = {
         Args: { p_role: string; p_tenant: string; p_user: string }
         Returns: undefined
       }
+      search_partners: {
+        Args: {
+          p_limit?: number
+          p_query?: string
+          p_role?: string
+          p_tenant: string
+        }
+        Returns: {
+          email: string
+          id: string
+          is_customer: boolean
+          is_supplier: boolean
+          legal_name: string
+          phone: string
+          tax_id: string
+          trade_name: string
+        }[]
+      }
       set_member_status: {
         Args: { p_status: string; p_tenant: string; p_user: string }
         Returns: undefined
+      }
+      settle_installment: {
+        Args: {
+          p_amount: number
+          p_bank: string
+          p_discount?: number
+          p_fine?: number
+          p_installment: string
+          p_interest?: number
+          p_notes?: string
+          p_settled_at: string
+        }
+        Returns: string
       }
       touch_member: { Args: { p_tenant: string }; Returns: undefined }
       trial_balance: {
@@ -1078,6 +1560,8 @@ export type Database = {
     }
     Enums: {
       account_kind: "asset" | "liability" | "equity" | "revenue" | "expense"
+      doc_kind: "payable" | "receivable"
+      doc_status: "open" | "partial" | "settled" | "canceled"
       period_status: "open" | "closed"
       scope_mode: "all" | "assigned" | "own"
     }
@@ -1208,6 +1692,8 @@ export const Constants = {
   public: {
     Enums: {
       account_kind: ["asset", "liability", "equity", "revenue", "expense"],
+      doc_kind: ["payable", "receivable"],
+      doc_status: ["open", "partial", "settled", "canceled"],
       period_status: ["open", "closed"],
       scope_mode: ["all", "assigned", "own"],
     },
