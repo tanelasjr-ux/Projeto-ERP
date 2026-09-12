@@ -593,17 +593,6 @@ export type Database = {
         Args: { p_email: string; p_role: string; p_tenant: string }
         Returns: string
       }
-      list_member_permissions: {
-        Args: { p_tenant: string; p_user: string }
-        Returns: {
-          description: string
-          label: string
-          module: string
-          permission_key: string
-          risk: string
-          sort_order: number
-        }[]
-      }
       list_members: {
         Args: { p_tenant: string }
         Returns: {
