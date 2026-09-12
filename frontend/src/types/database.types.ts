@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      _f1: {
-        Row: {
-          k: string
-          v: string | null
-        }
-        Insert: {
-          k: string
-          v?: string | null
-        }
-        Update: {
-          k?: string
-          v?: string | null
-        }
-        Relationships: []
-      }
-      _f1_res: {
-        Row: {
-          esperado: string | null
-          n: number
-          obtido: string | null
-          ok: string | null
-          verificacao: string | null
-        }
-        Insert: {
-          esperado?: string | null
-          n: number
-          obtido?: string | null
-          ok?: string | null
-          verificacao?: string | null
-        }
-        Update: {
-          esperado?: string | null
-          n?: number
-          obtido?: string | null
-          ok?: string | null
-          verificacao?: string | null
-        }
-        Relationships: []
-      }
       account_balances: {
         Row: {
           account_id: string
